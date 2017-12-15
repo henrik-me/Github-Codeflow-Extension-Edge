@@ -1,0 +1,19 @@
+{
+      "manifest_version": 2,
+      "name": "Codeflow",
+      "version": "1.0",
+      "author" : "henrikm",
+    
+      "description": "Enables CodeFlow Integration for Github PR's.",
+    
+      "icons": {
+        "25": "icons/icon.png"
+      },
+    
+      "content_scripts": [
+        {
+          "matches": ["*://*.github.com/*/pull/*"],
+          "js": ["codeflow.js"]
+        }
+      ]
+    }
