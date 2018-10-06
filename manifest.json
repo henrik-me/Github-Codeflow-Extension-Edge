@@ -12,8 +12,9 @@
     
       "content_scripts": [
         {
-          "matches": ["*://*.github.com/*/pull/*"],
-          "js": ["codeflow.js"]
+          "matches": ["https://github.com/*", "https://*.github.com/*"],
+          "js": ["codeflow.js"],
+          "run_at": "document_idle"
         }
       ]
     }
