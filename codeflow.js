@@ -54,8 +54,8 @@ function ApplyToPullRequestList() {
         var prlink = makeLink(document.URL.substring(0, document.URL.length-1) + "/" + id);
         var codeflowElement = document.createElement("span");
         codeflowElement.innerHTML = prlink;
-        var statusElement = issueListHeaders[i].getElementsByClassName("commit-build-statuses");
-        statusElement[0].insertAdjacentElement('beforeend', codeflowElement);
+        var titleLink = issueListHeaders[i].getElementsByClassName("js-navigation-open")[0];
+        titleLink.insertAdjacentElement('afterend', codeflowElement);
     }
     return issueListHeaders.length > 0;
 }
