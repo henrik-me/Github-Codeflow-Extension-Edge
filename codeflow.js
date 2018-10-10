@@ -88,7 +88,4 @@ function tryUntilSuccess() {
 
 tryUntilSuccess();
 
-// window.onload = tryUntilSuccess;
-// document.addEventListener("pageshow", tryUntilSuccess)
-
 })();
