@@ -13,16 +13,30 @@ function makeLink(prlink) {
         + "<img src='data:image/gif;base64," + installIcon + "' width='27' height='24'></a>";
 }
 
-
-// For individual pull request page
+// For individual pull request page, commits tab and checks tab
 function ApplyToPullRequest() {
     var discussionHeaders = document.getElementsByClassName("gh-header-number");
     if (discussionHeaders.length > 0)
     {
         var discussionHeader = discussionHeaders[0];
-        var prlink = makeLink(document.location);
+        var prlink = document.location.href;
+    
+        // Link to a specific change: remove # elements as CodeFlow doesn't support this
+        prlink = prlink.replace(document.location.hash, "")
+        
+        // File Tab: Remove the files part of the url as CodeFlow doesn't support that
+        var filesPosition = prlink.indexOf("/files");
+        if (filesPosition !== -1)
+        {
+          prlink = prlink.substring(0, filesPosition);
+        }
+    
+        // Commit and checks tab: remove commit from the link
+        prlink = prlink.replace("/commits", "")
+        prlink = prlink.replace("/checks", "")
+    
         var codeflowElement = document.createElement("span");
-        codeflowElement.innerHTML = prlink;
+        codeflowElement.innerHTML = makeLink(prlink);
         discussionHeader.insertAdjacentElement('beforeend', codeflowElement);
         return true;
     }
