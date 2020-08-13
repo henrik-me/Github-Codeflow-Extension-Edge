@@ -10,6 +10,39 @@ function makeLink(prlink, height) {
 
 // For individual pull request page, commits tab and checks tab
 function ApplyToPullRequest() {
+    var discussionHeaders = document.getElementsByClassName("gh-header-title");
+    if (discussionHeaders.length > 0)
+    {
+        var discussionHeader = discussionHeaders[0];
+        var prlink = document.location.href;
+        
+        // Link to a specific change: remove # elements as CodeFlow doesn't support this
+        prlink = prlink.replace(document.location.hash, "")
+        
+        // File Tab: Remove the files part of the url as CodeFlow doesn't support that
+        var filesPosition = prlink.indexOf("/files");
+        if (filesPosition !== -1)
+        {
+          prlink = prlink.substring(0, filesPosition);
+        }
+        
+        // Commit and checks tab: remove commit from the link
+        prlink = prlink.replace("/commits", "")
+        prlink = prlink.replace("/checks", "")
+        console.log(prlink);
+
+        var codeflowElement = document.createElement("span");
+        codeflowElement.innerHTML = makeLink(prlink, 27);
+        var headerSpans = discussionHeader.getElementsByTagName("span");
+        numberSpan = headerSpans[1];
+        numberSpan.insertAdjacentElement('beforeend', codeflowElement);
+        return true;
+    }
+    return false;
+}
+
+// For individual pull request page, commits tab and checks tab, when scrolling down
+function ApplyToPullRequestScrolledDown() {
     var discussionHeaders = document.getElementsByClassName("gh-header-number");
     if (discussionHeaders.length > 0)
     {
@@ -63,8 +96,9 @@ function applyLinks() {
     }
 
     var result = ApplyToPullRequest() || ApplyToPullRequestList();
+    var result2 = ApplyToPullRequestScrolledDown(); 
 
-    if (result == true) {
+    if (result == true || result2) {
         document.codeflowApplied = true;
     }
 };
