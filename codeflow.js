@@ -1,6 +1,8 @@
 (function(){
-console.log("[CodeFlow] Starting");
-var codeflowPngInGithub = "https://github.com/henrik-me/Github-Codeflow-Extension-Edge/blob/master/icons/icon.png?raw=true";
+const EnableDebugging = false;
+    if(EnableDebugging) 
+        console.log("[CodeFlow] Starting");
+const codeflowPngInGithub = "https://github.com/henrik-me/Github-Codeflow-Extension-Edge/blob/master/icons/icon.png?raw=true";
 
 function makeLink(prlink, height) {
     return " <a id='CodeFlow' href='codeflow:open?pullrequest=" + prlink +
@@ -10,6 +12,8 @@ function makeLink(prlink, height) {
 
 // For individual pull request page, commits tab and checks tab
 function ApplyToPullRequest() {
+    if(EnableDebugging) 
+        console.log("[CodeFlow] ApplyToPullRequest");
     var discussionHeaders = document.getElementsByClassName("gh-header-title");
     if (discussionHeaders.length > 0)
     {
@@ -29,7 +33,8 @@ function ApplyToPullRequest() {
         // Commit and checks tab: remove commit from the link
         prlink = prlink.replace("/commits", "")
         prlink = prlink.replace("/checks", "")
-        console.log(prlink);
+        if(EnableDebugging) 
+            console.log("[CodeFlow] PR Link: " + prlink);
 
         var codeflowElement = document.createElement("span");
         codeflowElement.innerHTML = makeLink(prlink, 27);
@@ -43,7 +48,8 @@ function ApplyToPullRequest() {
 
 // For individual pull request page, commits tab and checks tab, when scrolling down
 function ApplyToPullRequestScrolledDown() {
-    console.log("[CodeFlow] ApplytoPullRequest");
+    if(EnableDebugging) 
+        console.log("[CodeFlow] ApplyToPullRequestScrolledDown");
     var discussionHeaders = document.getElementsByClassName("gh-header-number");
     if (discussionHeaders.length > 0)
     {
@@ -63,7 +69,8 @@ function ApplyToPullRequestScrolledDown() {
         // Commit and checks tab: remove commit from the link
         prlink = prlink.replace("/commits", "")
         prlink = prlink.replace("/checks", "")
-        console.log("[CodeFlow] PR Link" + prlink);
+        if(EnableDebugging) 
+            console.log("[CodeFlow] PR Link: " + prlink);
 
         var codeflowElement = document.createElement("span");
         codeflowElement.innerHTML = makeLink(prlink, 27);
@@ -75,7 +82,8 @@ function ApplyToPullRequestScrolledDown() {
 
 // for pull request list page
 function ApplyToPullRequestList() {
-    console.log("[CodeFlow] ApplyToPullRequestList");
+    if(EnableDebugging) 
+        console.log("[CodeFlow] ApplyToPullRequestList");
     var issueListHeaders = document.getElementsByClassName("js-issue-row");
     len = issueListHeaders.length;
     for (var i = 0; i < len; i++) {
@@ -108,14 +116,16 @@ function applyLinks() {
 // Retry to accomodate dynamic content.
 var retries = 5;
 function tryUntilSuccess() {
-    console.log("[CodeFlow] Try");
+    if(EnableDebugging) 
+        console.log("[CodeFlow] Try");
     retries = retries - 1;
     if (retries == 0) {
         return;
     }
     if (applyLinks() == false) 
     {
-        console.log("[CodeFlow] Re-Try");
+        if(EnableDebugging) 
+            console.log("[CodeFlow] Re-Try");
         setTimeout(tryUntilSuccess(), 300);
     }
 }
