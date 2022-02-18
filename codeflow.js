@@ -100,12 +100,7 @@ function applyLinks() {
     var result = ApplyToPullRequest() || ApplyToPullRequestList();
     var result2 = ApplyToPullRequestScrolledDown(); 
 
-<<<<<<< Updated upstream
-    if (result == true || result2) {
-=======
-    if (result == true) {
-        console.log("[CodeFlow] Links Applied");
->>>>>>> Stashed changes
+    if (result === true || result2 === true) {
         document.codeflowApplied = true;
     }
 };
