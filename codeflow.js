@@ -1,5 +1,5 @@
 (function(){
-
+console.log("[CodeFlow] Starting");
 var codeflowPngInGithub = "https://github.com/henrik-me/Github-Codeflow-Extension-Edge/blob/master/icons/icon.png?raw=true";
 
 function makeLink(prlink, height) {
@@ -43,6 +43,7 @@ function ApplyToPullRequest() {
 
 // For individual pull request page, commits tab and checks tab, when scrolling down
 function ApplyToPullRequestScrolledDown() {
+    console.log("[CodeFlow] ApplytoPullRequest");
     var discussionHeaders = document.getElementsByClassName("gh-header-number");
     if (discussionHeaders.length > 0)
     {
@@ -62,7 +63,7 @@ function ApplyToPullRequestScrolledDown() {
         // Commit and checks tab: remove commit from the link
         prlink = prlink.replace("/commits", "")
         prlink = prlink.replace("/checks", "")
-        console.log(prlink);
+        console.log("[CodeFlow] PR Link" + prlink);
 
         var codeflowElement = document.createElement("span");
         codeflowElement.innerHTML = makeLink(prlink, 27);
@@ -74,6 +75,7 @@ function ApplyToPullRequestScrolledDown() {
 
 // for pull request list page
 function ApplyToPullRequestList() {
+    console.log("[CodeFlow] ApplyToPullRequestList");
     var issueListHeaders = document.getElementsByClassName("js-issue-row");
     len = issueListHeaders.length;
     for (var i = 0; i < len; i++) {
@@ -98,7 +100,12 @@ function applyLinks() {
     var result = ApplyToPullRequest() || ApplyToPullRequestList();
     var result2 = ApplyToPullRequestScrolledDown(); 
 
+<<<<<<< Updated upstream
     if (result == true || result2) {
+=======
+    if (result == true) {
+        console.log("[CodeFlow] Links Applied");
+>>>>>>> Stashed changes
         document.codeflowApplied = true;
     }
 };
@@ -106,16 +113,17 @@ function applyLinks() {
 // Retry to accomodate dynamic content.
 var retries = 5;
 function tryUntilSuccess() {
+    console.log("[CodeFlow] Try");
     retries = retries - 1;
     if (retries == 0) {
         return;
     }
     if (applyLinks() == false) 
     {
+        console.log("[CodeFlow] Re-Try");
         setTimeout(tryUntilSuccess(), 300);
     }
 }
 
 tryUntilSuccess();
-
 })();
