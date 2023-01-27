@@ -33,6 +33,12 @@
             // Commit and checks tab: remove commit from the link
             prlink = prlink.replace("/commits", "")
             prlink = prlink.replace("/checks", "")
+
+            // remove trailing / from link
+            if (prlink.endsWith("/") && prlink.length > 2) {
+                prlink = prlink.substring(0, prlink.length - 1);
+            }
+
             if(EnableDebugging) 
                 console.log("[CodeFlow] PR Link: " + prlink);
     
