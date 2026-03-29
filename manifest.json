@@ -1,5 +1,5 @@
 {
-      "manifest_version": 2,
+      "manifest_version": 3,
       "name": "Codeflow",
       "version": "1.0",
       "author" : "henrikm",
@@ -7,7 +7,9 @@
       "description": "Enables CodeFlow Integration for Github PR's.",
     
       "icons": {
-        "25": "icons/icon.png"
+        "16": "icons/icon-16x16.png",
+        "48": "icons/icon-48x48.png",
+        "128": "icons/icon-128x128.png"
       },
     
       "content_scripts": [
