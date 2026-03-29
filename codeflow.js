@@ -2,7 +2,7 @@
     const EnableDebugging = false;
         if(EnableDebugging) 
             console.log("[CodeFlow] Starting");
-    const codeflowPngInGithub = "https://github.com/henrik-me/Github-Codeflow-Extension-Edge/blob/master/icons/icon.png?raw=true";
+    const codeflowPngInGithub = "https://github.com/henrik-me/Github-Codeflow-Extension-Edge/blob/master/icons/icon-16x16.png?raw=true";
     
     function makeLink(prlink, height) {
         return " <a id='CodeFlow' href='codeflow:open?pullrequest=" + prlink +
