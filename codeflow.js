@@ -14,7 +14,7 @@
     function ApplyToPullRequest() {
         if(EnableDebugging) 
             console.log("[CodeFlow] ApplyToPullRequest");
-        var discussionHeaders = document.getElementsByClassName("gh-header-title");
+        var discussionHeaders = document.querySelectorAll('h1[data-component="PH_Title"]');
         if (discussionHeaders.length > 0)
         {
             var discussionHeader = discussionHeaders[0];
@@ -64,7 +64,7 @@
     function ApplyToPullRequestScrolledDown() {
         if(EnableDebugging) 
             console.log("[CodeFlow] ApplyToPullRequestScrolledDown");
-        var discussionHeaders = document.getElementsByClassName("gh-header-number");
+        var discussionHeaders = document.querySelectorAll('h2[data-component="PH_Title"]');
         if (discussionHeaders.length > 0)
         {
             var discussionHeader = discussionHeaders[0];
@@ -103,8 +103,9 @@
         for (var i = 0; i < len; i++) {
             var id = issueListHeaders[i].id.replace("issue_", "");
     
-            // back up from pulls to pull/id.
-            var prlink = makeLink(document.URL.substring(0, document.URL.length-1) + "/" + id, 16);
+            // Build proper pull URL from the current pulls page URL, ignoring any query string
+            var baseUrl = document.location.origin + document.location.pathname.replace(/\/pulls$/, '/pull');
+            var prlink = makeLink(baseUrl + "/" + id, 16);
             var codeflowElement = document.createElement("span");
             codeflowElement.innerHTML = prlink;
             var titleLink = issueListHeaders[i].getElementsByClassName("js-navigation-open")[0];
