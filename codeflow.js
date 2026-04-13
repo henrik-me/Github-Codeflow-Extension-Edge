@@ -4,6 +4,8 @@
     const codeflowLinkSelector = "[data-codeflow-link]";
     const applyDelayMs = 150;
     const maxInitialRetries = 10;
+    const pullRequestPathPattern = /^\/[^\/]+\/[^\/]+\/pull\/\d+(?:\/.*)?$/;
+    const pullRequestListPathPattern = /^\/[^\/]+\/[^\/]+\/pulls\/?$/;
 
     var applyTimer = null;
     var retriesRemaining = maxInitialRetries;
@@ -51,6 +53,11 @@
 
         debugLog("PR Link: " + prlink);
         return prlink;
+    }
+
+    function isSupportedPage() {
+        var path = document.location.pathname;
+        return pullRequestPathPattern.test(path) || pullRequestListPathPattern.test(path);
     }
 
     function ensureLink(lookupContainer, insertTarget, position, prlink, height) {
@@ -128,6 +135,10 @@
     }
 
     function applyLinks() {
+        if (isSupportedPage() === false) {
+            return false;
+        }
+
         var foundTarget = false;
 
         foundTarget = ApplyToPullRequest() || foundTarget;
@@ -158,9 +169,21 @@
     }
 
     function onNavigationOrDomChange(useRetries) {
-        if (lastUrl !== document.location.href) {
+        var urlChanged = lastUrl !== document.location.href;
+
+        if (urlChanged) {
             lastUrl = document.location.href;
             retriesRemaining = maxInitialRetries;
+        }
+
+        if (isSupportedPage() === false) {
+            if (applyTimer !== null) {
+                clearTimeout(applyTimer);
+                applyTimer = null;
+            }
+
+            scheduledApplyUsesRetries = false;
+            return;
         }
 
         scheduleApply(useRetries);
@@ -180,6 +203,7 @@
     }
 
     document.addEventListener("pjax:end", function () { onNavigationOrDomChange(true); });
+    document.addEventListener("turbo:load", function () { onNavigationOrDomChange(true); });
     document.addEventListener("turbo:render", function () { onNavigationOrDomChange(true); });
     window.addEventListener("popstate", function () { onNavigationOrDomChange(true); });
     window.addEventListener("pageshow", function () { onNavigationOrDomChange(true); });
