@@ -20,10 +20,10 @@
 
     debugLog("Starting");
 
-    function makeLink(prlink, height) {
+    function makeLink(href, height) {
         var link = document.createElement("a");
         link.setAttribute("data-codeflow-link", "true");
-        link.href = "codeflow:open?pullrequest=" + prlink + "&ref=EdgeExtension";
+        link.href = href;
         link.setAttribute("aria-label", "Open in CodeFlow");
         link.title = "Open in CodeFlow";
 
@@ -37,19 +37,8 @@
     }
 
     function normalizePullRequestUrl(url) {
-        var prlink = url.replace(document.location.hash, "");
-        var filesPosition = prlink.indexOf("/files");
-
-        if (filesPosition !== -1) {
-            prlink = prlink.substring(0, filesPosition);
-        }
-
-        prlink = prlink.replace("/commits", "");
-        prlink = prlink.replace("/checks", "");
-
-        if (prlink.endsWith("/") && prlink.length > 2) {
-            prlink = prlink.substring(0, prlink.length - 1);
-        }
+        var parsedUrl = new URL(url);
+        var prlink = parsedUrl.origin + parsedUrl.pathname.split("/").slice(0, 5).join("/");
 
         debugLog("PR Link: " + prlink);
         return prlink;
@@ -65,14 +54,26 @@
             return false;
         }
 
-        if (lookupContainer.querySelector(codeflowLinkSelector) !== null) {
-            return true;
+        var href = "codeflow:open?pullrequest=" + prlink + "&ref=EdgeExtension";
+        var link = lookupContainer.querySelector(codeflowLinkSelector);
+        var codeflowElement;
+        if (link !== null) {
+            codeflowElement = link.parentElement;
+            if (link.href !== href) {
+                link.href = href;
+            }
+        } else {
+            codeflowElement = document.createElement("span");
+            codeflowElement.appendChild(document.createTextNode(" "));
+            codeflowElement.appendChild(makeLink(href, height));
         }
 
-        var codeflowElement = document.createElement("span");
-        codeflowElement.appendChild(document.createTextNode(" "));
-        codeflowElement.appendChild(makeLink(prlink, height));
-        insertTarget.insertAdjacentElement(position, codeflowElement);
+        var correctlyPlaced = position === "beforeend" ?
+            codeflowElement.parentElement === insertTarget :
+            insertTarget.nextElementSibling === codeflowElement;
+        if (!correctlyPlaced) {
+            insertTarget.insertAdjacentElement(position, codeflowElement);
+        }
         return true;
     }
 
@@ -80,55 +81,49 @@
     function ApplyToPullRequest() {
         debugLog("ApplyToPullRequest");
 
-        var discussionHeaders = document.querySelectorAll('h1[data-component="PH_Title"]');
+        var discussionHeaders = document.querySelectorAll('h1[data-component="PH_Title"], h1.gh-header-title');
         if (discussionHeaders.length === 0) {
             return false;
         }
 
         var discussionHeader = discussionHeaders[0];
-        var headerSpans = discussionHeader.getElementsByTagName("span");
-        if (headerSpans.length === 0) {
-            debugLog("Unable to identify location to insert codeflow element.");
-            return false;
-        }
-
-        var numberSpan = headerSpans.length > 1 ? headerSpans[1] : headerSpans[0];
-        return ensureLink(discussionHeader, numberSpan, "beforeend", normalizePullRequestUrl(document.location.href), 27);
+        // The React heading's PR-number span is screen-reader-only.
+        return ensureLink(discussionHeader, discussionHeader, "beforeend", normalizePullRequestUrl(document.location.href), 27);
     }
 
     // For individual pull request page, commits tab and checks tab, when scrolling down
     function ApplyToPullRequestScrolledDown() {
         debugLog("ApplyToPullRequestScrolledDown");
 
-        var discussionHeaders = document.querySelectorAll('h2[data-component="PH_Title"]');
-        if (discussionHeaders.length === 0) {
+        var legacyTitleLink = document.querySelector('a.js-issue-title[href="#top"]');
+        var discussionHeader = document.querySelector('h2[data-component="PH_Title"]') ||
+            (legacyTitleLink && legacyTitleLink.closest("h1"));
+        if (!discussionHeader) {
             return false;
         }
 
-        var discussionHeader = discussionHeaders[0];
-        return ensureLink(discussionHeader, discussionHeader, "beforeend", normalizePullRequestUrl(document.location.href), 27);
+        var titleLink = discussionHeader.querySelector('a[href="#top"]');
+        var titleRow = titleLink ? titleLink.parentElement : discussionHeader;
+        return ensureLink(discussionHeader, titleRow, "beforeend", normalizePullRequestUrl(document.location.href), 27);
     }
 
     // for pull request list page
     function ApplyToPullRequestList() {
         debugLog("ApplyToPullRequestList");
 
-        var issueListHeaders = document.getElementsByClassName("js-issue-row");
+        var titleLinks = document.querySelectorAll('a[data-testid="listitem-title-link"], .js-issue-row a.js-navigation-open');
         var foundTarget = false;
-        var basePath = document.location.pathname.replace(/\/pulls\/?$/, "/pull");
-        var baseUrl = document.location.origin + basePath;
 
-        for (var i = 0; i < issueListHeaders.length; i++) {
-            var issueListHeader = issueListHeaders[i];
-            var titleLink = issueListHeader.getElementsByClassName("js-navigation-open")[0];
-            var id = issueListHeader.id.replace("issue_", "");
-
-            if (!titleLink || !id) {
+        for (var i = 0; i < titleLinks.length; i++) {
+            var titleLink = titleLinks[i];
+            if (titleLink.origin !== document.location.origin || !pullRequestPathPattern.test(titleLink.pathname)) {
+                debugLog("Skipping a title link that does not point to a GitHub PR.");
                 continue;
             }
 
+            var issueListHeader = titleLink.closest("li, .js-issue-row") || titleLink.parentElement;
             foundTarget = true;
-            ensureLink(issueListHeader, titleLink, "afterend", baseUrl + "/" + id, 16);
+            ensureLink(issueListHeader, titleLink, "afterend", normalizePullRequestUrl(titleLink.href), 16);
         }
 
         return foundTarget;
@@ -139,13 +134,12 @@
             return false;
         }
 
-        var foundTarget = false;
+        if (pullRequestListPathPattern.test(document.location.pathname)) {
+            return ApplyToPullRequestList();
+        }
 
-        foundTarget = ApplyToPullRequest() || foundTarget;
-        foundTarget = ApplyToPullRequestList() || foundTarget;
-        foundTarget = ApplyToPullRequestScrolledDown() || foundTarget;
-
-        return foundTarget;
+        var foundTarget = ApplyToPullRequest();
+        return ApplyToPullRequestScrolledDown() || foundTarget;
     }
 
     function scheduleApply(useRetries) {
@@ -191,7 +185,8 @@
 
     var observer = new MutationObserver(function (mutations) {
         for (var i = 0; i < mutations.length; i++) {
-            if (mutations[i].addedNodes.length > 0 || lastUrl !== document.location.href) {
+            if (mutations[i].type === "attributes" || mutations[i].addedNodes.length > 0 ||
+                mutations[i].removedNodes.length > 0 || lastUrl !== document.location.href) {
                 onNavigationOrDomChange(false);
                 return;
             }
@@ -199,7 +194,7 @@
     });
 
     if (document.body) {
-        observer.observe(document.body, { childList: true, subtree: true });
+        observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["href"] });
     }
 
     document.addEventListener("pjax:end", function () { onNavigationOrDomChange(true); });
