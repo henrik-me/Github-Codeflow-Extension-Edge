@@ -1,6 +1,0 @@
-{
-  "purpose": "Draft-only live GitHub PR reproduction; do not merge",
-  "expected": "The extension displays an Open in CodeFlow icon next to the PR title",
-  "surfaces": ["conversation", "commits", "checks", "files", "pull-request-list"],
-  "extensionChanges": false
-}

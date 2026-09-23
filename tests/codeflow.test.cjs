@@ -119,3 +119,111 @@ test("repeated navigation events do not duplicate header icons", async t => {
     }
     assertLink(page.document.querySelector("h1"));
 });
+
+const reactList = `
+    <ul role="list">
+        <li id="generated-row-a"><h3><a data-testid="listitem-title-link" href="${prUrl}">First PR</a></h3></li>
+        <li id="generated-row-b"><h3><a data-testid="listitem-title-link" href="/owner/repo/pull/11">Second PR</a></h3></li>
+    </ul>`;
+
+test("React list uses PR links rather than generated row IDs", async t => {
+    const page = createPage(t, reactList, "https://github.com/owner/repo/pulls?q=is%3Aopen");
+    await page.settle();
+    assertLink(page.document.querySelector("#generated-row-a"));
+    assertLink(page.document.querySelector("#generated-row-b"), prUrl.replace("/10", "/11"));
+});
+
+test("legacy list uses the linked PR number, not the internal issue ID", async t => {
+    const page = createPage(t, `
+        <div class="js-issue-row" id="issue_999999">
+            <a class="js-navigation-open" href="/owner/repo/pull/10">PR</a>
+        </div>`, "https://github.com/owner/repo/pulls/");
+    await page.settle();
+    assertLink(page.document.querySelector(".js-issue-row"));
+});
+
+test("PR list ignores external, invalid, and non-PR title links", async t => {
+    const page = createPage(t, `
+        <ul>
+            <li><a data-testid="listitem-title-link" href="https://example.com/owner/repo/pull/10">External</a></li>
+            <li><a data-testid="listitem-title-link" href="/owner/repo/issues/10">Issue</a></li>
+            <li><a data-testid="listitem-title-link" href="javascript:void(0)">Action</a></li>
+            <li><a data-testid="listitem-title-link" href="https://[">Invalid</a></li>
+        </ul>`, "https://github.com/owner/repo/pulls");
+    await page.settle();
+    assert.equal(page.document.querySelectorAll(linkSelector).length, 0);
+});
+
+for (const suffix of ["/", "/files?diff=split#diff-123", "/commits/abc123",
+    "/checks?check_run_id=1", "/changes?diff=unified#diff-456"]) {
+    test("PR destination is canonical on " + suffix, async t => {
+        const page = createPage(t, reactHeader, prUrl + suffix);
+        await page.settle();
+        assertLink(page.document.querySelector("h1"));
+    });
+}
+
+test("URL normalization preserves a repository named commits", async t => {
+    const url = "https://github.com/owner/commits/pull/10";
+    const page = createPage(t, reactHeader, url + "/commits");
+    await page.settle();
+    assertLink(page.document.querySelector("h1"), url);
+});
+
+test("a header reused for a different PR gets the new destination", async t => {
+    const page = createPage(t, reactHeader);
+    await page.settle();
+    const nextUrl = prUrl.replace("/10", "/11");
+    page.window.history.pushState({}, "", nextUrl);
+    page.document.querySelector(".markdown-title").textContent = "Next PR";
+    await page.settle();
+    assertLink(page.document.querySelector("h1"), nextUrl);
+});
+
+test("a list row reused by filtering gets the new destination without duplicates", async t => {
+    const page = createPage(t, reactList, "https://github.com/owner/repo/pulls");
+    await page.settle();
+    const row = page.document.querySelector("#generated-row-a");
+    const nextUrl = prUrl.replace("/10", "/12");
+    row.querySelector("a[data-testid]").href = nextUrl;
+    await page.settle();
+    assertLink(row, nextUrl);
+});
+
+test("repository-to-list-to-PR navigation works without reloading the content script", async t => {
+    const page = createPage(t, "<h1>Repository</h1>", "https://github.com/owner/repo");
+    await page.settle();
+    assert.equal(page.document.querySelectorAll(linkSelector).length, 0);
+    page.window.history.pushState({}, "", "/owner/repo/pulls");
+    page.document.body.innerHTML = reactList;
+    await page.settle();
+    assertLink(page.document.querySelector("#generated-row-a"));
+    page.window.history.pushState({}, "", prUrl);
+    page.document.body.innerHTML = reactHeader;
+    await page.settle();
+    assertLink(page.document.querySelector("h1"));
+});
+
+test("an icon removed by a DOM refresh is restored", async t => {
+    const page = createPage(t, reactHeader);
+    await page.settle();
+    page.document.querySelector(linkSelector).parentElement.remove();
+    await page.settle();
+    assertLink(page.document.querySelector("h1"));
+});
+
+test("an existing icon moved into a hidden span is relocated", async t => {
+    const page = createPage(t, reactHeader);
+    await page.settle();
+    page.document.querySelector(".sr-only").appendChild(
+        page.document.querySelector(linkSelector).parentElement);
+    await page.settle();
+    assertLink(page.document.querySelector("h1"));
+});
+
+test("list pages do not decorate unrelated page headings", async t => {
+    const page = createPage(t, reactHeader + reactList, "https://github.com/owner/repo/pulls");
+    await page.settle();
+    assert.equal(page.document.querySelector("h1").querySelector(linkSelector), null);
+    assertLink(page.document.querySelector("#generated-row-a"));
+});
