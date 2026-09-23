@@ -80,33 +80,30 @@
     function ApplyToPullRequest() {
         debugLog("ApplyToPullRequest");
 
-        var discussionHeaders = document.querySelectorAll('h1[data-component="PH_Title"]');
+        var discussionHeaders = document.querySelectorAll('h1[data-component="PH_Title"], h1.gh-header-title');
         if (discussionHeaders.length === 0) {
             return false;
         }
 
         var discussionHeader = discussionHeaders[0];
-        var headerSpans = discussionHeader.getElementsByTagName("span");
-        if (headerSpans.length === 0) {
-            debugLog("Unable to identify location to insert codeflow element.");
-            return false;
-        }
-
-        var numberSpan = headerSpans.length > 1 ? headerSpans[1] : headerSpans[0];
-        return ensureLink(discussionHeader, numberSpan, "beforeend", normalizePullRequestUrl(document.location.href), 27);
+        // The React heading's PR-number span is screen-reader-only.
+        return ensureLink(discussionHeader, discussionHeader, "beforeend", normalizePullRequestUrl(document.location.href), 27);
     }
 
     // For individual pull request page, commits tab and checks tab, when scrolling down
     function ApplyToPullRequestScrolledDown() {
         debugLog("ApplyToPullRequestScrolledDown");
 
-        var discussionHeaders = document.querySelectorAll('h2[data-component="PH_Title"]');
-        if (discussionHeaders.length === 0) {
+        var legacyTitleLink = document.querySelector('a.js-issue-title[href="#top"]');
+        var discussionHeader = document.querySelector('h2[data-component="PH_Title"]') ||
+            (legacyTitleLink && legacyTitleLink.closest("h1"));
+        if (!discussionHeader) {
             return false;
         }
 
-        var discussionHeader = discussionHeaders[0];
-        return ensureLink(discussionHeader, discussionHeader, "beforeend", normalizePullRequestUrl(document.location.href), 27);
+        var titleLink = discussionHeader.querySelector('a[href="#top"]');
+        var titleRow = titleLink ? titleLink.parentElement : discussionHeader;
+        return ensureLink(discussionHeader, titleRow, "beforeend", normalizePullRequestUrl(document.location.href), 27);
     }
 
     // for pull request list page
