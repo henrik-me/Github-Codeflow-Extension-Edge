@@ -33,6 +33,17 @@ test("React title icon is outside the screen-reader-only PR number", async t => 
     assert.equal(page.document.querySelector(".sr-only").textContent, " - #10");
 });
 
+test("React Heading title receives a visible icon with the current GitHub markup", async t => {
+    const page = await createPage(t, `
+        <h1 data-component="Heading">
+            <span class="markdown-title" data-component="Text">Title</span>
+            <span class="sr-only"> - #10</span>
+        </h1>`);
+    await page.settle();
+    assertLink(page.document.querySelector("h1"));
+    assert.equal(page.document.querySelector(".sr-only").textContent, " - #10");
+});
+
 test("legacy Files changed heading receives an icon", async t => {
     const page = await createPage(t, legacyHeader, prUrl + "/files#diff-123");
     await page.settle();
