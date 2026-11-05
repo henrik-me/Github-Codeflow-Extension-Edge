@@ -81,7 +81,7 @@
     function ApplyToPullRequest() {
         debugLog("ApplyToPullRequest");
 
-        var discussionHeaders = document.querySelectorAll('h1[data-component="PH_Title"], h1.gh-header-title');
+        var discussionHeaders = document.querySelectorAll('h1[data-component="PH_Title"], h1.gh-header-title, h1[data-component="Heading"]:has(.markdown-title)');
         if (discussionHeaders.length === 0) {
             return false;
         }
